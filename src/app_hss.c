@@ -1,28 +1,20 @@
-#include "app_hss.h"
+#include <freeDiameter/extension.h>
 
-static int app_hss_entry (const char *p_pszConfFile)
+#include "app_hss.h"
+#include "ps_server/ps_server.h"
+
+int app_hss_init (char * conffile)
 {
   /* suppress compiler warning */
-  p_pszConfFile = p_pszConfFile;
+  conffile = conffile;
 
-  /* регистрация функции валидации пира */
-  CHECK_FCT (fd_peer_validate_register (app_pcrf_peer_validate));
+  /* инициализация приложения S6a */
+  CHECK_FCT (app_s6a_init());
 
-  /* инициализация словаря */
-  CHECK_FCT (cxdx_dict_init (NULL));
+  /* инициализация сервера сообщений PS */
+  CHECK_FCT (ps_server_init ());
 
-  /* регистрация callback функции обработки ECR запросов */
-  CHECK_FCT (app_hss_server_init ());
-
-  /* регистрация приложения */
-  CHECK_FCT (fd_disp_app_support (g_psoDictAppCxDx, g_psoDict3GPPVend, 1, 0));
-
+  TRACE_DEBUG(INFO, "hss application initialized");
   return 0;
 }
-
-void fd_ext_fini (void)
-{
-  app_hss_server_fini ();
-}
-
-EXTENSION_ENTRY ("app_hss", app_hss_entry);
+EXTENSION_ENTRY("app_hss", app_hss_init, "dict_s6a");
